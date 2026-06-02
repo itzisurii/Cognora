@@ -2,26 +2,38 @@ package edu.iCET.security.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.util.Date;
 import javax.crypto.SecretKey;
+import java.util.Date;
 
+@Component
 public class JwtUtil {
 
-    private static final String SECRET = "my-super-secret-key-my-super-secret-key";
+    @Value("${jwt.secret}")
+    private String secret;
 
-    private static final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private SecretKey key;
 
-    public static String generateToken(String email) {
+    @PostConstruct
+    public void init() {
+        key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public String generateToken(String email) {
+
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(key)
                 .compact();
     }
 
-    public static String extractEmail(String token) {
+    public String extractEmail(String token) {
+
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
